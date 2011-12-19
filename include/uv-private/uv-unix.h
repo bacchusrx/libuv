@@ -128,7 +128,8 @@ typedef void* uv_lib_t;
 
 /* UV_NAMED_PIPE */
 #define UV_PIPE_PRIVATE_FIELDS \
-  const char* pipe_fname; /* strdup'ed */
+  const char* pipe_fname; /* strdup'ed */ \
+  void* pipe_flock;
 
 
 /* UV_PREPARE */ \
