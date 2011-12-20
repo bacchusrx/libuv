@@ -57,6 +57,15 @@ TEST_IMPL(pipe_bind_error_addrinuse) {
 
   ASSERT(uv_last_error(uv_default_loop()).code == UV_EADDRINUSE);
 
+  /* This covers a bug in the original implementation whereby a only the first
+   * attempt to bind an already bound pipe would fail. Subsequent attempts
+   * would succeed because the lock file was cleared after the bind error. */
+
+  r = uv_pipe_bind(&server2, TEST_PIPENAME);
+  ASSERT(r == -1);
+
+  ASSERT(uv_last_error(uv_default_loop()).code == UV_EADDRINUSE);
+
   r = uv_listen((uv_stream_t*)&server1, SOMAXCONN, NULL);
   ASSERT(r == 0);
   r = uv_listen((uv_stream_t*)&server2, SOMAXCONN, NULL);

@@ -163,16 +163,17 @@ out:
     }
     uv__close(sockfd);
 
-    if (pipe_flock) {
-      uv_flock_destroy(pipe_flock);
-    }
+    /* If you clear the lock here, then only the first attempt to bind a locked
+     * pipe fails. Presumably, some kind of cleanup still belongs here. */
+    
+    /*
+     * if (pipe_flock) {
+     *   uv_flock_destroy(pipe_flock);
+     * }
+     *
+     */
 
     free((void*)pipe_fname);
-
-    if (handle->pipe_flock) {
-      uv_flock_destroy((uv_flock_t*)handle->pipe_flock);
-      free(handle->pipe_flock);
-    }
   }
 
   errno = saved_errno;
@@ -226,6 +227,11 @@ int uv_pipe_cleanup(uv_pipe_t* handle) {
      */
     unlink(handle->pipe_fname);
     free((void*)handle->pipe_fname);
+  }
+
+  if (handle->pipe_flock) {
+    uv_flock_destroy((uv_flock_t*)handle->pipe_flock);
+    free(handle->pipe_flock);
   }
 
   errno = saved_errno;
