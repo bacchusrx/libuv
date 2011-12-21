@@ -61,7 +61,7 @@ int uv_flock_release(uv_flock_t* lock);
 /* Destroy the file lock. Releases the file lock and associated resources.
  */
 
-int uv_flock_destroy(uv_flock_t* lock);
+void uv_flock_destroy(uv_flock_t* lock);
 
 int uv_pipe_init(uv_loop_t* loop, uv_pipe_t* handle, int ipc) {
   uv__stream_init(loop, (uv_stream_t*)handle, UV_NAMED_PIPE);
@@ -163,15 +163,13 @@ out:
     }
     uv__close(sockfd);
 
-    /* If you clear the lock here, then only the first attempt to bind a locked
-     * pipe fails. Presumably, some kind of cleanup still belongs here. */
-    
-    /*
-     * if (pipe_flock) {
-     *   uv_flock_destroy(pipe_flock);
-     * }
-     *
-     */
+    if (pipe_flock) {
+      if (!locked) {
+        uv_flock_release(pipe_flock);
+      }
+      uv_flock_destroy(pipe_flock);
+      free(pipe_flock);
+    }
 
     free((void*)pipe_fname);
   }
@@ -230,6 +228,7 @@ int uv_pipe_cleanup(uv_pipe_t* handle) {
   }
 
   if (handle->pipe_flock) {
+    uv_flock_release((uv_flock_t*)handle->pipe_flock);
     uv_flock_destroy((uv_flock_t*)handle->pipe_flock);
     free(handle->pipe_flock);
   }
@@ -422,40 +421,26 @@ out:
   return status;
 }
 
-int uv_flock_release(uv_flock_t* lock) {
+void uv_flock_destroy(uv_flock_t* lock) {
   int saved_errno;
-  int status;
 
   saved_errno = errno;
-  status = -1;
-
-  if (unlink(lock->lockfile) == -1) {
-    /* Now what? */
-    goto out;
-  }
-
-  uv__close(lock->lockfd);
-  lock->lockfd = -1;
-  status = 0;
-
-out:
-  errno = saved_errno;
-  return status;
-}
-
-
-int uv_flock_destroy(uv_flock_t* lock) {
-  int saved_errno;
-  int status;
-
-  saved_errno = errno;
-  status = unlink(lock->lockfile);
 
   uv__close(lock->lockfd);
   lock->lockfd = -1;
 
   free((void*)lock->lockfile);
   lock->lockfile = NULL;
+
+  errno = saved_errno;
+}
+
+int uv_flock_release(uv_flock_t* lock) {
+  int saved_errno;
+  int status;
+
+  saved_errno = errno;
+  status = unlink(lock->lockfile);
 
   errno = saved_errno;
   return status;
