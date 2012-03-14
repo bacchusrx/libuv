@@ -53,12 +53,12 @@ int uv_flock_init(uv_flock_t* lock, const char* filename);
 
 int uv_flock_acquire(uv_flock_t* lock, int* locked);
 
-/* Release the file lock. Returns 0 on success, -1 on error.
+/* Release (unlink) the file lock. Returns 0 on success, -1 on error.
  */
 
 int uv_flock_release(uv_flock_t* lock);
 
-/* Destroy the file lock. Releases the file lock and associated resources.
+/* Destroy the file lock (close fd and free memory).
  */
 
 void uv_flock_destroy(uv_flock_t* lock);
