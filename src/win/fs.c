@@ -248,10 +248,8 @@ void fs__open(uv_fs_t* req, const wchar_t* path, int flags, int mode) {
     goto end;
   }
 
-  /* Figure out whether path is a file or a directory. */
-  if (GetFileAttributesW(path) & FILE_ATTRIBUTE_DIRECTORY) {
-    attributes |= FILE_FLAG_BACKUP_SEMANTICS;
-  }
+  /* Setting this flag makes it possible to open a directory. */
+  attributes |= FILE_FLAG_BACKUP_SEMANTICS;
 
   file = CreateFileW(path,
                      access,
@@ -913,7 +911,7 @@ static DWORD WINAPI uv_fs_thread_proc(void* parameter) {
       fs__fsync(req, (uv_file)req->arg0);
       break;
     case UV_FS_FTRUNCATE:
-      fs__ftruncate(req, (uv_file)req->arg0, (off_t)req->stat.st_atime);
+      fs__ftruncate(req, (uv_file)req->arg0, req->stat.st_atime);
       break;
     case UV_FS_SENDFILE:
       fs__sendfile(req,

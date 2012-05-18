@@ -121,7 +121,9 @@ typedef intptr_t ssize_t;
   XX( 51, ELOOP, "too many symbolic links encountered") \
   XX( 52, EXDEV, "cross-device link not permitted") \
   XX( 53, ENOTEMPTY, "directory not empty") \
-  XX( 54, ENOSPC, "no space left on device")
+  XX( 54, ENOSPC, "no space left on device") \
+  XX( 55, EIO, "i/o error") \
+  XX( 56, EROFS, "read-only file system" )
 
 
 #define UV_ERRNO_GEN(val, name, s) UV_##name = val,
@@ -1057,6 +1059,34 @@ struct uv_process_s {
 /* Initializes uv_process_t and starts the process. */
 UV_EXTERN int uv_spawn(uv_loop_t*, uv_process_t*,
     uv_process_options_t options);
+
+
+/* Temporary fix for node. Do no use. */
+enum uv_process_flags {
+  UV_PROCESS_SETUID = (1 << 0),
+  UV_PROCESS_SETGID = (1 << 1),
+  UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS = (1 << 2)
+};
+
+/* Temporary fix for node. Do not use. */
+typedef struct uv_process_options2_s {
+  uv_exit_cb exit_cb; /* Called after the process exits. */
+  const char* file; /* Path to program to execute. */
+  char** args;
+  char** env;
+  char* cwd;
+  unsigned int flags;
+  uv_pipe_t* stdin_stream;
+  uv_pipe_t* stdout_stream;
+  uv_pipe_t* stderr_stream;
+  uv_uid_t uid;
+  uv_gid_t gid;
+} uv_process_options2_t;
+
+/* Temporary fix for node. Do not use. */
+UV_EXTERN int uv_spawn2(uv_loop_t*, uv_process_t*,
+    uv_process_options2_t options);
+
 
 /*
  * Kills the process with the specified signal. The user must still
