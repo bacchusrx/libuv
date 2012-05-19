@@ -380,7 +380,7 @@ int uv_flock_acquire(uv_flock_t* lock, int* locked_p) {
   locked = 0;
 
   do {
-    lockfd = open(lock->lockfile, O_WRONLY | O_CREAT, 0666);
+    lockfd = open(lock->lockfile, O_WRONLY | O_CREAT | O_CLOEXEC, 0666);
   }
   while (lockfd == -1 && errno == EINTR);
 
